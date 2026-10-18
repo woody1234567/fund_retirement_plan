@@ -69,24 +69,24 @@ function onReset() {
           </thead>
           <tbody>
             <tr v-for="(h, i) in store.holdings" :key="h.id">
-              <td><input v-model="h.code" class="w-code" placeholder="AGF9" /></td>
-              <td><input v-model="h.name" class="w-name" placeholder="基金名稱" /></td>
-              <td>
+              <td data-label="基金代碼"><input v-model="h.code" class="w-code" placeholder="AGF9" /></td>
+              <td data-label="基金名稱"><input v-model="h.name" class="w-name" placeholder="基金名稱" /></td>
+              <td data-label="幣別">
                 <select v-model="h.currency"><option v-for="c in CURRENCIES" :key="c">{{ c }}</option></select>
               </td>
-              <td>
+              <td data-label="配息頻率">
                 <select v-model.number="h.frequency">
                   <option v-for="f in frequencies" :key="f" :value="f">{{ FREQUENCY_LABELS[f] }}</option>
                 </select>
               </td>
-              <td><input v-model.number="h.amount" type="number" min="0" class="w-num" /></td>
-              <td><input v-model.number="h.price" type="number" min="0" step="any" class="w-num" /></td>
-              <td><input v-model.number="h.dividendPerUnit" type="number" min="0" step="any" class="w-num" /></td>
-              <td class="num">{{ fmt(store.results[i]?.units ?? 0, 2) }}</td>
-              <td class="num">{{ fmt(store.results[i]?.monthly ?? 0, 2) }}</td>
-              <td class="num strong">{{ fmt(store.results[i]?.monthlyTWD ?? 0) }}</td>
-              <td class="num">{{ pct(store.results[i]?.yieldRate ?? 0) }}</td>
-              <td><button class="del" title="刪除" @click="store.removeHolding(h.id)">✕</button></td>
+              <td data-label="投資金額"><input v-model.number="h.amount" type="number" min="0" class="w-num" /></td>
+              <td data-label="市價(淨值)"><input v-model.number="h.price" type="number" min="0" step="any" class="w-num" /></td>
+              <td data-label="每單位配息(單次)"><input v-model.number="h.dividendPerUnit" type="number" min="0" step="any" class="w-num" /></td>
+              <td data-label="持有單位" class="num">{{ fmt(store.results[i]?.units ?? 0, 2) }}</td>
+              <td data-label="平均月配息" class="num">{{ fmt(store.results[i]?.monthly ?? 0, 2) }}</td>
+              <td data-label="月配息(台幣)" class="num strong">{{ fmt(store.results[i]?.monthlyTWD ?? 0) }}</td>
+              <td data-label="年化配息率" class="num">{{ pct(store.results[i]?.yieldRate ?? 0) }}</td>
+              <td class="td-del"><button class="del" title="刪除" @click="store.removeHolding(h.id)">✕<span class="del-text"> 刪除</span></button></td>
             </tr>
           </tbody>
         </table>
@@ -164,4 +164,44 @@ button { cursor: pointer; border-radius: 6px; padding: 7px 16px; font-size: .9re
 .ok .bar div { background: #2e9e6e; } .warn .bar div { background: #e08a1e; }
 .result.ok { border-left: 6px solid #2e9e6e; } .result.warn { border-left: 6px solid #e08a1e; }
 .verdict { font-size: 1.05rem; font-weight: 600; margin: 6px 0; }
+.del-text { display: none; }
+
+@media (max-width: 900px) {
+  .top { padding: 12px 16px; }
+  .card { padding: 16px; }
+}
+
+@media (max-width: 768px) {
+  .top { flex-direction: column; align-items: stretch; gap: 10px; text-align: center; }
+  .top h1 { font-size: 1.15rem; }
+  .actions { justify-content: center; }
+  .actions button { flex: 1; }
+  main { margin: 12px auto; gap: 12px; padding: 0 10px; }
+  input, select { font-size: 16px; } /* prevent iOS zoom on focus */
+
+  .scroll { overflow-x: visible; }
+  table, tbody { display: block; }
+  thead { display: none; }
+  tbody { display: grid; gap: 12px; }
+  tr { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 12px; padding: 12px; border: 1px solid #dbe5e2; border-radius: 8px; background: #fafcfb; }
+  td { display: flex; flex-direction: column; gap: 3px; padding: 0; min-width: 0; }
+  td::before { content: attr(data-label); font-size: .72rem; color: #46605a; }
+  td.td-del::before { content: none; }
+  td:nth-child(2), td.td-del { grid-column: 1 / -1; }
+  td.num { text-align: left; white-space: normal; font-size: 1rem; }
+  td.td-del { align-items: flex-end; }
+  .w-code, .w-name, .w-num { width: 100%; box-sizing: border-box; }
+  td input, td select { width: 100%; box-sizing: border-box; }
+  .del { border: 1px solid #e3b5b5; padding: 6px 12px; }
+  .del-text { display: inline; }
+  .rates label { flex: 1 1 120px; }
+  .rates input { width: 100%; box-sizing: border-box; }
+  .stats { grid-template-columns: repeat(2, 1fr); }
+  .stats b { font-size: 1.15rem; }
+}
+
+@media (max-width: 400px) {
+  tr { grid-template-columns: 1fr; }
+  .stats { grid-template-columns: 1fr; }
+}
 </style>
