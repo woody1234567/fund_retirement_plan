@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { usePlanStore } from '@/stores/plan'
-import { CURRENCIES, FREQUENCY_LABELS, type Frequency } from '@/utils/calc'
+import { MOCK_FUNDS } from '@/data/mockFunds'
+import { CURRENCIES, FREQUENCY_LABELS, type Frequency, type Holding } from '@/utils/calc'
 import { exportExcel } from '@/utils/exportExcel'
 
 const store = usePlanStore()
+const selectedMockFunds = ref<Record<string, string>>({})
 const frequencies = Object.keys(FREQUENCY_LABELS).map(Number) as Frequency[]
 const foreignCurrencies = computed(() =>
   CURRENCIES.filter((c) => c !== 'TWD' && store.holdings.some((h) => h.currency === c)),
@@ -22,6 +24,14 @@ function onExport() {
 }
 function onReset() {
   if (confirm('確定要清空所有基金資料嗎？')) store.reset()
+}
+
+function applyMockFund(holding: Holding, fundCode: string) {
+  const fund = MOCK_FUNDS.find((item) => item.code === fundCode)
+  if (!fund) return
+
+  Object.assign(holding, fund)
+  selectedMockFunds.value[holding.id] = ''
 }
 </script>
 
@@ -54,6 +64,8 @@ function onReset() {
     <section class="card">
       <h2>持有基金</h2>
       <p class="hint">
+        可從下拉選單帶入一筆完整的示範基金資料（標示 MOCK，非即時行情），也可以直接手動修改。
+        <br />
         資料可參考玉山銀行基金資訊頁 (如
         <a href="https://wealth.esunbank.com/zh-tw/fund/fund-info?fundCode=AGF9" target="_blank" rel="noopener">AGF9</a>)
         之淨值與配息資料。金額、市價、配息皆以基金計價幣別輸入。
@@ -69,6 +81,19 @@ function onReset() {
           </thead>
           <tbody>
             <tr v-for="(h, i) in store.holdings" :key="h.id">
+              <td data-label="快速帶入示範基金">
+                <select
+                  v-model="selectedMockFunds[h.id]"
+                  class="mock-select"
+                  aria-label="選擇示範基金"
+                  @change="applyMockFund(h, selectedMockFunds[h.id] || '')"
+                >
+                  <option value="">選擇示範基金</option>
+                  <option v-for="fund in MOCK_FUNDS" :key="fund.code" :value="fund.code">
+                    {{ fund.code }}｜{{ fund.name }}
+                  </option>
+                </select>
+              </td>
               <td data-label="基金代碼"><input v-model="h.code" class="w-code" placeholder="AGF9" /></td>
               <td data-label="基金名稱"><input v-model="h.name" class="w-name" placeholder="基金名稱" /></td>
               <td data-label="幣別">
@@ -143,7 +168,7 @@ input, select { padding: 6px 8px; border: 1px solid #c4d3cf; border-radius: 6px;
 table { border-collapse: collapse; width: 100%; font-size: .9rem; }
 th { text-align: left; font-weight: 600; font-size: .78rem; color: #46605a; padding: 6px 4px; white-space: nowrap; }
 td { padding: 4px; }
-.w-code { width: 70px; } .w-name { width: 200px; } .w-num { width: 100px; }
+.mock-select { width: 190px; } .w-code { width: 70px; } .w-name { width: 200px; } .w-num { width: 100px; }
 td.num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
 td.strong { font-weight: 700; color: #1f6f5c; }
 button { cursor: pointer; border-radius: 6px; padding: 7px 16px; font-size: .9rem; border: 1px solid transparent; }
@@ -187,10 +212,10 @@ button { cursor: pointer; border-radius: 6px; padding: 7px 16px; font-size: .9re
   td { display: flex; flex-direction: column; gap: 3px; padding: 0; min-width: 0; }
   td::before { content: attr(data-label); font-size: .72rem; color: #46605a; }
   td.td-del::before { content: none; }
-  td:nth-child(2), td.td-del { grid-column: 1 / -1; }
+  td:nth-child(1), td:nth-child(3), td.td-del { grid-column: 1 / -1; }
   td.num { text-align: left; white-space: normal; font-size: 1rem; }
   td.td-del { align-items: flex-end; }
-  .w-code, .w-name, .w-num { width: 100%; box-sizing: border-box; }
+  .mock-select, .w-code, .w-name, .w-num { width: 100%; box-sizing: border-box; }
   td input, td select { width: 100%; box-sizing: border-box; }
   .del { border: 1px solid #e3b5b5; padding: 6px 12px; }
   .del-text { display: inline; }
